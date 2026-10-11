@@ -95,11 +95,9 @@ export async function POST(req: Request) {
     return response;
   } catch (error: any) {
     console.error("Register error:", error);
-    const msg = error?.message?.includes("database") || error?.message?.includes("connect") || error?.message?.includes("Can't reach")
-      ? "Database connection issue. Please connect Vercel Postgres / Neon under Storage tab."
-      : (error?.message || "An unexpected error occurred during registration");
+    const detail = error?.message || String(error);
     return NextResponse.json(
-      { error: msg },
+      { error: `Database error: ${detail}` },
       { status: 500 }
     );
   }
