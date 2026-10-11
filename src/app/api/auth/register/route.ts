@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, createSessionToken, AUTH_COOKIE_NAME } from "@/lib/auth";
+import { ensureDatabaseTables } from "@/lib/ensure-tables";
 import { z } from "zod";
 
 const RegisterSchema = z.object({
@@ -12,6 +13,8 @@ const RegisterSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    await ensureDatabaseTables();
+
     const body = await req.json();
     const parsed = RegisterSchema.safeParse(body);
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword, createSessionToken, AUTH_COOKIE_NAME } from "@/lib/auth";
+import { ensureDatabaseTables } from "@/lib/ensure-tables";
 import { z } from "zod";
 
 const LoginSchema = z.object({
@@ -10,6 +11,8 @@ const LoginSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    await ensureDatabaseTables();
+
     const body = await req.json();
     const parsed = LoginSchema.safeParse(body);
 
