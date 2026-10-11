@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String PREFS_NAME = "StudyMatePrefs";
     private static final String KEY_SERVER_URL = "server_url";
-    private static final String DEFAULT_URL = "http://192.168.2.24:3000/login";
+    private static final String DEFAULT_URL = "https://ai-studymate-six.vercel.app/login";
     private static final int FILE_CHOOSER_REQUEST_CODE = 1001;
 
     private WebView webView;
@@ -164,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
         builder.setTitle("Palitan ang Server URL");
 
         final EditText input = new EditText(this);
-        input.setHint("http://192.168.2.24:3000/login");
+        input.setHint("https://ai-studymate-six.vercel.app/login");
         input.setText(prefs.getString(KEY_SERVER_URL, DEFAULT_URL));
         builder.setView(input);
 
@@ -172,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
             String newUrl = input.getText().toString().trim();
             if (!newUrl.isEmpty()) {
                 if (!newUrl.startsWith("http://") && !newUrl.startsWith("https://")) {
-                    newUrl = "http://" + newUrl;
+                    newUrl = "https://" + newUrl;
                 }
                 prefs.edit().putString(KEY_SERVER_URL, newUrl).apply();
                 errorLayout.setVisibility(View.GONE);

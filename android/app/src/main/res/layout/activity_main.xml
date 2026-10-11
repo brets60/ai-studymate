@@ -52,7 +52,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:gravity="center"
-            android:text="Hindi makakonek sa study server (192.168.2.24:3000).\nSiguraduhing naka-konek ang iyong phone sa parehong Wi-Fi ng computer."
+            android:text="Hindi makakonek sa study server. Pakisuri ang iyong internet o i-update ang server URL."
             android:textColor="#475569"
             android:textSize="14sp" />
 
