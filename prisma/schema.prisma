@@ -1,0 +1,246 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id               String            @id @default(cuid())
+  fullName         String
+  email            String            @unique
+  password         String
+  educationLevel   String            @default("High School") // High School, Senior High, College, University, Graduate
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  subjects         Subject[]
+  conversations    Conversation[]
+  studyNotes       StudyNote[]
+  flashcardSets    FlashcardSet[]
+  quizzes          Quiz[]
+  quizAttempts     QuizAttempt[]
+  studyTasks       StudyTask[]
+  studySessions    StudySession[]
+  uploadedDocs     UploadedDocument[]
+  settings         UserSettings?
+
+  @@index([email])
+}
+
+model UserSettings {
+  id                      String   @id @default(cuid())
+  userId                  String   @unique
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  theme                   String   @default("light") // light, dark, system
+  dailyStudyGoal          Int      @default(60) // minutes
+  notificationPreferences String   @default("{\"email\":true,\"deadlines\":true,\"reminders\":true}") // JSON
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+}
+
+model Subject {
+  id            String             @id @default(cuid())
+  userId        String
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  color         String             @default("#2563eb")
+  createdAt     DateTime           @default(now())
+
+  conversations Conversation[]
+  studyNotes    StudyNote[]
+  flashcardSets FlashcardSet[]
+  quizzes       Quiz[]
+  studyTasks    StudyTask[]
+  studySessions StudySession[]
+  uploadedDocs  UploadedDocument[]
+
+  @@index([userId])
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId String?
+  subject   Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  title     String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  messages  Message[]
+
+  @@index([userId])
+  @@index([subjectId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String       // "user" | "assistant" | "system"
+  content        String
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+}
+
+model StudyNote {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId       String?
+  subject         Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  title           String
+  originalContent String
+  summary         String
+  keyConcepts     String?  // JSON array string of concepts/definitions
+  keyTerms        String?  // JSON array string of important terms
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([subjectId])
+}
+
+model FlashcardSet {
+  id         String      @id @default(cuid())
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId  String?
+  subject    Subject?    @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  title      String
+  createdAt  DateTime    @default(now())
+
+  flashcards Flashcard[]
+
+  @@index([userId])
+  @@index([subjectId])
+}
+
+model Flashcard {
+  id             String       @id @default(cuid())
+  flashcardSetId String
+  flashcardSet   FlashcardSet @relation(fields: [flashcardSetId], references: [id], onDelete: Cascade)
+  question       String
+  answer         String
+  difficulty     String       @default("medium") // "easy" | "medium" | "hard" | "mastered"
+  nextReviewAt   DateTime     @default(now())
+  createdAt      DateTime     @default(now())
+
+  @@index([flashcardSetId])
+  @@index([nextReviewAt])
+}
+
+model Quiz {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId     String?
+  subject       Subject?       @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  title         String
+  difficulty    String         @default("medium") // "easy" | "medium" | "hard"
+  questionCount Int
+  createdAt     DateTime       @default(now())
+
+  questions     QuizQuestion[]
+  attempts      QuizAttempt[]
+
+  @@index([userId])
+  @@index([subjectId])
+}
+
+model QuizQuestion {
+  id            String         @id @default(cuid())
+  quizId        String
+  quiz          Quiz           @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  question      String
+  questionType  String         // "multiple_choice" | "true_false" | "identification" | "short_answer"
+  options       String?        // JSON array string of options e.g. ["A", "B", "C", "D"]
+  correctAnswer String
+  explanation   String?
+
+  responses     QuizResponse[]
+
+  @@index([quizId])
+}
+
+model QuizAttempt {
+  id             String         @id @default(cuid())
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quizId         String
+  quiz           Quiz           @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  score          Int
+  totalQuestions Int
+  completedAt    DateTime       @default(now())
+
+  responses      QuizResponse[]
+
+  @@index([userId])
+  @@index([quizId])
+}
+
+model QuizResponse {
+  id             String       @id @default(cuid())
+  attemptId      String
+  attempt        QuizAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId     String
+  question       QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedAnswer String
+  isCorrect      Boolean
+
+  @@index([attemptId])
+  @@index([questionId])
+}
+
+model StudyTask {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId   String?
+  subject     Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  title       String
+  description String?
+  dueDate     DateTime?
+  priority    String    @default("medium") // "low" | "medium" | "high" | "urgent"
+  status      String    @default("pending") // "pending" | "in_progress" | "completed"
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+  @@index([dueDate])
+  @@index([status])
+}
+
+model StudySession {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId       String?
+  subject         Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  durationMinutes Int
+  startedAt       DateTime  @default(now())
+  endedAt         DateTime?
+
+  @@index([userId])
+  @@index([startedAt])
+}
+
+model UploadedDocument {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId   String?
+  subject     Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  filename    String
+  storagePath String
+  mimeType    String
+  fileSize    Int      @default(0)
+  textContent String?  // Extracted text content for AI queries
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
