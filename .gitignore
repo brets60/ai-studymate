@@ -23,9 +23,9 @@ yarn-error.log*
 # Android build outputs and SDK local settings
 android/.gradle
 android/build
-android/app/build
+android/app/build/
 android/local.properties
-*.apk
+!public/ai-studymate.apk
 *.aab
 
 # OS files
